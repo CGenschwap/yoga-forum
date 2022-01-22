@@ -1,0 +1,31 @@
+# fly.toml file generated for yoga-forum on 2022-04-10T18:33:36-04:00
+
+app = "yoga-forum"
+
+[[services]]
+internal_port = 8080
+protocol = "tcp"
+
+[[services.ports]]
+handlers = ["http"]
+port = "80"
+force_https = true
+
+[[services.ports]]
+handlers = ["tls", "http"]
+port = "443"
+
+[[statics]]
+guest_path = "/usr/src/app/public/"
+url_prefix = "/public"
+
+[[statics]]
+guest_path = "/usr/src/app/favicon/"
+url_prefix = "/favicon"
+
+[mounts]
+source = "app_data"
+destination = "/data"
+
+[env]
+YOGA_DATA="/data"

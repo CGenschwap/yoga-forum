@@ -1,0 +1,537 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "YOGA Forum",
+        "description": "A community of builders using a shared API-only forum",
+        "version": "1.0.0",
+        "termsOfService": "Coming soon",
+        "contact": {
+            "email": "cgenschwap@gmail.com"
+        },
+        "license": {
+            "name": "GNU GPLv3 ",
+            "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+        }
+    },
+    "servers": [
+        {
+            "url": "https://test.youonlygetanapi.com/v1/api",
+            "description": "The YOGA API test server"
+        }
+    ],
+    "paths": {
+        "/ping": {
+            "get": {
+                "description": "A ping endpoint for testing. Always returns 'Pong!'",
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string",
+                                    "example": "Pong!"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/login": {
+            "post": {
+                "tags": [
+                    "Users"
+                ],
+                "description": "Login as a given user. Use either the `username` or `user_id`. Returns the API token for using authenticated APIs (such as creating a story or comment).",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserLogin"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "user_id": {
+                                            "type": "number"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users": {
+            "post": {
+                "tags": [
+                    "Users"
+                ],
+                "description": "Create a new user with the given `username` and `password`. Remember your credentials, as you will need them to login!",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NewUser"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "user_id": {
+                                            "type": "number"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/find/{username}": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "description": "Find a given `username`'s `user_id`.",
+                "parameters": [
+                    {
+                        "name": "username",
+                        "in": "path",
+                        "description": "Username you want to find the id of",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "user_id": {
+                                            "type": "number"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/stories": {
+            "get": {
+                "tags": [
+                    "Stories"
+                ],
+                "description": "List stories. Note: Currently only supports listing by newest.",
+                "parameters": [
+                    {
+                        "name": "next_token",
+                        "in": "path",
+                        "description": "Optional next_token for fetching the next page of comments",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "stories": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Story"
+                                            }
+                                        },
+                                        "next_token": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Stories"
+                ],
+                "description": "Submit a new story to be viewed by others.",
+                "security": [
+                    { "BearerAuth": [] }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NewStory"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "story_id": {
+                                            "type": "number"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/stories/{story_id}": {
+            "get": {
+                "tags": [
+                    "Stories"
+                ],
+                "description": "Get a specific story by story_id.",
+                "parameters": [
+                    {
+                        "name": "story_id",
+                        "in": "path",
+                        "description": "ID of the story to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Story"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/stories/{story_id}/comments": {
+            "get": {
+                "tags": [
+                    "Comments"
+                ],
+                "description": "Get the comments for a given story. This is a paged endpoint which will always order by oldest-first.",
+                "parameters": [
+                    {
+                        "name": "story_id",
+                        "in": "path",
+                        "description": "ID of the story to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "next_token",
+                        "in": "query",
+                        "description": "Optional next_token for fetching the next page of comments",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "stories": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Comment"
+                                            }
+                                        },
+                                        "next_token": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Comments"
+                ],
+                "description": "Submit a comment to the story. This can either be a new top-level comment, or a response to another comment (set the parent_id in that case)",
+                "security": [
+                    { "BearerAuth": [] }
+                ],
+                "parameters": [
+                    {
+                        "name": "story_id",
+                        "in": "path",
+                        "description": "ID of the story to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NewComment"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "comment_id": {
+                                            "type": "number"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/stories/{story_id}/comments/{comment_id}": {
+            "get": {
+                "tags": [
+                    "Comments"
+                ],
+                "description": "Get a specific comment on a specific story.",
+                "parameters": [
+                    {
+                        "name": "story_id",
+                        "in": "path",
+                        "description": "ID of the story to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "comment_id",
+                        "in": "path",
+                        "description": "ID of the comment to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Comment"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Story": {
+                "required": [
+                    "id", "author_id", "created_at", "title"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "author_id": {
+                        "type": "number"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "url": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "text": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                }
+            },
+            "Comment": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "author_id": {
+                        "type": "number"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "text": {
+                        "type": "string"
+                    },
+                    "parent_id": {
+                        "type": "number",
+                        "nullable": true
+                    }
+                }
+            },
+            "NewStory": {
+                "type": "object",
+                "required": [
+                    "title"
+                ],
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "example": "Some Title"
+                    },
+                    "url": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "http://example.com"
+                    },
+                    "text": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "Some body of text"
+                    }
+                }
+            },
+            "NewComment": {
+                "type": "object",
+                "required": [
+                    "text"
+                ],
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "example": "Here is an example comment!"
+                    },
+                    "parent_id": {
+                        "type": "number",
+                        "example": 23,
+                        "nullable": true
+                    }
+                }
+            },
+            "NewUser": {
+                "type": "object",
+                "required": [
+                    "username",
+                    "password"
+                ],
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    }
+                }
+            },
+            "UserLogin": {
+                "type": "object",
+                "required": [
+                    "password"
+                ],
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "TestUser"
+                    },
+                    "user_id": {
+                        "type": "number",
+                        "nullable": true,
+                        "example": null
+                    },
+                    "password": {
+                        "type": "string",
+                        "example": "im-a-password"
+                    }
+                }
+            }
+        },
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "description": "JWT Authorizations header using Bearer scheme.",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        }
+    }
+}

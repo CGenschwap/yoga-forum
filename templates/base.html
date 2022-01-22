@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {% block head %}
+        <title>YOGA</title>
+        {% endblock head %}
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
+        <link rel="manifest" href="/favicon/site.webmanifest">
+    </head>
+    <body>
+        <!-- https://codepo8.github.io/css-fork-on-github-ribbon/ -->
+{% raw %}
+<style>#forkongithub a{background:#212121;color:#dcdcdc;text-decoration:none;font-family:arial,sans-serif;text-align:center;font-weight:bold;padding:5px 40px;font-size:1rem;line-height:2rem;position:relative;transition:0.5s;}#forkongithub a:hover{background:#c11;color:#dcdcdc;}#forkongithub a::before,#forkongithub a::after{content:"";width:100%;display:block;position:absolute;top:1px;left:0;height:1px;background:#fff;}#forkongithub a::after{bottom:1px;top:auto;}@media screen and (min-width:800px){#forkongithub{position:absolute;display:block;top:0;right:0;width:200px;overflow:hidden;height:200px;z-index:9999;}#forkongithub a{width:200px;position:absolute;top:60px;right:-60px;transform:rotate(45deg);-webkit-transform:rotate(45deg);-ms-transform:rotate(45deg);-moz-transform:rotate(45deg);-o-transform:rotate(45deg);box-shadow:4px 4px 10px rgba(0,0,0,0.8);}}</style><span id="forkongithub"><a href="https://github.com/CGenschwap/yoga-forum">Source on GitHub</a></span>
+{% endraw %}
+{% raw %}
+<style>
+#yoga-header::after {
+   content: 'beta';
+   font-size: 16px;
+   vertical-align: top;
+}
+</style>
+{% endraw %}
+        <header>
+            <h1 id='yoga-header'>Y.O.G.A.</h1>
+            <p>You Only Get an API</p>
+            <nav>
+                <a href="/public/index.html">Home</a>
+                <a href="/public/api_docs.html">API Documentation</a>
+                <a href="/public/guide.html">Guide</a>
+            </nav>
+        </header>
+        <main>
+            {% block content %}
+            {% endblock content %}
+        </main>
+        <footer>
+            @ Copyright 2022 by C. Genschwap
+        </footer>
+    </body>
+</html>

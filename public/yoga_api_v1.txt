@@ -1,0 +1,269 @@
+
+**************************
+* YOGA API Documentation *
+**************************
+
+Documentation for the YOGA API. This is generated from the OpenAPI specification which should be considered the true-reference.
+
+*************
+** Servers **
+*************
+There are currently two servers provided for YOGA. One is the
+development server which you should use while developing your
+UI, and the other is the production instance which will be
+moderated.
+
+- https://test.youonlygetanapi.com/v1/api - The YOGA API test server
+
+
+**************
+** Entities **
+**************
+Various entity definitions which will be referenced throughout
+the API documentation.
+
+Comment {
+    author_id: number 
+    created_at: string 
+    id: number 
+    parent_id: number  (optional) 
+    text: string 
+}
+
+NewComment {
+    parent_id: number  (optional) 
+    text: string 
+}
+
+NewStory {
+    text: string  (optional) 
+    title: string 
+    url: string  (optional) 
+}
+
+NewUser {
+    password: string 
+    username: string 
+}
+
+Story {
+    author_id: number 
+    created_at: string 
+    id: number 
+    text: string  (optional) 
+    title: string 
+    url: string  (optional) 
+}
+
+UserLogin {
+    password: string 
+    user_id: number  (optional) 
+    username: string  (optional) 
+}
+
+
+**********
+** APIs **
+**********
+
+GET /ping
+
+    A ping endpoint for testing. Always returns 'Pong!'
+
+
+
+Responses:
+- 200
+    
+---------------------------------
+
+
+
+GET /stories
+
+    List stories. Note: Currently only supports listing by newest.
+
+
+Parameters:
+    next_token:   Optional next_token for fetching the next page of comments
+
+Responses:
+- 200
+    
+    {
+        next_token: string
+        stories: [Story]
+    }
+    
+    
+---------------------------------
+
+POST /stories
+
+    Submit a new story to be viewed by others.
+
+This is an authenticated endpoint and requires the 'Authorization: Bearer {token}' header to be set. You can get the token from the `/users/login` endpoint.
+
+
+
+Body: (required)
+    NewStory (entity defined above)
+
+
+Responses:
+- 200
+    
+    {
+        story_id: number
+    }
+    
+    
+---------------------------------
+
+
+
+GET /stories/{story_id}
+
+    Get a specific story by story_id.
+
+
+Parameters:
+    story_id:  (required) ID of the story to get
+
+Responses:
+- 200
+    // TODO
+    
+    
+---------------------------------
+
+
+
+GET /stories/{story_id}/comments
+
+    Get the comments for a given story. This is a paged endpoint which will always order by oldest-first.
+
+
+Parameters:
+    story_id:  (required) ID of the story to get
+    next_token: (query param)  Optional next_token for fetching the next page of comments
+
+Responses:
+- 200
+    
+    {
+        next_token: string
+        stories: [Comment]
+    }
+    
+    
+---------------------------------
+
+POST /stories/{story_id}/comments
+
+    Submit a comment to the story. This can either be a new top-level comment, or a response to another comment (set the parent_id in that case)
+
+This is an authenticated endpoint and requires the 'Authorization: Bearer {token}' header to be set. You can get the token from the `/users/login` endpoint.
+
+
+Parameters:
+    story_id:  (required) ID of the story to get
+
+Body: (required)
+    NewComment (entity defined above)
+
+
+Responses:
+- 200
+    
+    {
+        comment_id: number
+    }
+    
+    
+---------------------------------
+
+
+
+GET /stories/{story_id}/comments/{comment_id}
+
+    Get a specific comment on a specific story.
+
+
+Parameters:
+    story_id:  (required) ID of the story to get
+    comment_id:  (required) ID of the comment to get
+
+Responses:
+- 200
+    // TODO
+    
+    
+---------------------------------
+
+
+
+POST /users
+
+    Create a new user with the given `username` and `password`. Remember your credentials, as you will need them to login!
+
+
+
+Body: (required)
+    NewUser (entity defined above)
+
+
+Responses:
+- 200
+    
+    {
+        user_id: number
+    }
+    
+    
+---------------------------------
+
+
+
+GET /users/find/{username}
+
+    Find a given `username`'s `user_id`.
+
+
+Parameters:
+    username:  (required) Username you want to find the id of
+
+Responses:
+- 200
+    
+    {
+        user_id: number
+    }
+    
+    
+---------------------------------
+
+
+
+POST /users/login
+
+    Login as a given user. Use either the `username` or `user_id`. Returns the API token for using authenticated APIs (such as creating a story or comment).
+
+
+
+Body: (required)
+    UserLogin (entity defined above)
+
+
+Responses:
+- 200
+    
+    {
+        user_id: number
+    }
+    
+    
+---------------------------------
+
+
+

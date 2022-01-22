@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>API Documentation</h1>
+
+<p>This page contains a printout of the <a href="/public/yoga_api_v1.txt">raw-text form of the API documentation</a>. If you prefer, we also provide a <a href="/public/openapi.json">OpenAPI Specification</a> as well as a <a href="/public/swagger.html">SwaggerUI</a> interactive API client.
+
+<pre>
+{% include "yoga_api_v1.txt" %}
+</pre>
+
+{% endblock content %}

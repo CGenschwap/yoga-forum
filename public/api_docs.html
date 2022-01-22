@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>YOGA</title>
+        
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
+        <link rel="manifest" href="/favicon/site.webmanifest">
+    </head>
+    <body>
+        <!-- https://codepo8.github.io/css-fork-on-github-ribbon/ -->
+
+<style>#forkongithub a{background:#212121;color:#dcdcdc;text-decoration:none;font-family:arial,sans-serif;text-align:center;font-weight:bold;padding:5px 40px;font-size:1rem;line-height:2rem;position:relative;transition:0.5s;}#forkongithub a:hover{background:#c11;color:#dcdcdc;}#forkongithub a::before,#forkongithub a::after{content:"";width:100%;display:block;position:absolute;top:1px;left:0;height:1px;background:#fff;}#forkongithub a::after{bottom:1px;top:auto;}@media screen and (min-width:800px){#forkongithub{position:absolute;display:block;top:0;right:0;width:200px;overflow:hidden;height:200px;z-index:9999;}#forkongithub a{width:200px;position:absolute;top:60px;right:-60px;transform:rotate(45deg);-webkit-transform:rotate(45deg);-ms-transform:rotate(45deg);-moz-transform:rotate(45deg);-o-transform:rotate(45deg);box-shadow:4px 4px 10px rgba(0,0,0,0.8);}}</style><span id="forkongithub"><a href="https://github.com/CGenschwap/yoga-forum">Source on GitHub</a></span>
+
+
+<style>
+#yoga-header::after {
+   content: 'beta';
+   font-size: 16px;
+   vertical-align: top;
+}
+</style>
+
+        <header>
+            <h1 id='yoga-header'>Y.O.G.A.</h1>
+            <p>You Only Get an API</p>
+            <nav>
+                <a href="/public/index.html">Home</a>
+                <a href="/public/api_docs.html">API Documentation</a>
+                <a href="/public/guide.html">Guide</a>
+            </nav>
+        </header>
+        <main>
+            
+
+<h1>API Documentation</h1>
+
+<p>This page contains a printout of the <a href="/public/yoga_api_v1.txt">raw-text form of the API documentation</a>. If you prefer, we also provide a <a href="/public/openapi.json">OpenAPI Specification</a> as well as a <a href="/public/swagger.html">SwaggerUI</a> interactive API client.
+
+<pre>
+
+**************************
+* YOGA API Documentation *
+**************************
+
+Documentation for the YOGA API. This is generated from the OpenAPI specification which should be considered the true-reference.
+
+*************
+** Servers **
+*************
+There are currently two servers provided for YOGA. One is the
+development server which you should use while developing your
+UI, and the other is the production instance which will be
+moderated.
+
+- https:&#x2F;&#x2F;test.youonlygetanapi.com&#x2F;v1&#x2F;api - The YOGA API test server
+
+
+**************
+** Entities **
+**************
+Various entity definitions which will be referenced throughout
+the API documentation.
+
+Comment {
+    author_id: number 
+    created_at: string 
+    id: number 
+    parent_id: number  (optional) 
+    text: string 
+}
+
+NewComment {
+    parent_id: number  (optional) 
+    text: string 
+}
+
+NewStory {
+    text: string  (optional) 
+    title: string 
+    url: string  (optional) 
+}
+
+NewUser {
+    password: string 
+    username: string 
+}
+
+Story {
+    author_id: number 
+    created_at: string 
+    id: number 
+    text: string  (optional) 
+    title: string 
+    url: string  (optional) 
+}
+
+UserLogin {
+    password: string 
+    user_id: number  (optional) 
+    username: string  (optional) 
+}
+
+
+**********
+** APIs **
+**********
+
+GET &#x2F;ping
+
+    A ping endpoint for testing. Always returns &#x27;Pong!&#x27;
+
+
+
+Responses:
+- 200
+    
+---------------------------------
+
+
+
+GET &#x2F;stories
+
+    List stories. Note: Currently only supports listing by newest.
+
+
+Parameters:
+    next_token:   Optional next_token for fetching the next page of comments
+
+Responses:
+- 200
+    
+    {
+        next_token: string
+        stories: [Story]
+    }
+    
+    
+---------------------------------
+
+POST &#x2F;stories
+
+    Submit a new story to be viewed by others.
+
+This is an authenticated endpoint and requires the 'Authorization: Bearer {token}' header to be set. You can get the token from the `/users/login` endpoint.
+
+
+
+Body: (required)
+    NewStory (entity defined above)
+
+
+Responses:
+- 200
+    
+    {
+        story_id: number
+    }
+    
+    
+---------------------------------
+
+
+
+GET &#x2F;stories&#x2F;{story_id}
+
+    Get a specific story by story_id.
+
+
+Parameters:
+    story_id:  (required) ID of the story to get
+
+Responses:
+- 200
+    // TODO
+    
+    
+---------------------------------
+
+
+
+GET &#x2F;stories&#x2F;{story_id}&#x2F;comments
+
+    Get the comments for a given story. This is a paged endpoint which will always order by oldest-first.
+
+
+Parameters:
+    story_id:  (required) ID of the story to get
+    next_token: (query param)  Optional next_token for fetching the next page of comments
+
+Responses:
+- 200
+    
+    {
+        next_token: string
+        stories: [Comment]
+    }
+    
+    
+---------------------------------
+
+POST &#x2F;stories&#x2F;{story_id}&#x2F;comments
+
+    Submit a comment to the story. This can either be a new top-level comment, or a response to another comment (set the parent_id in that case)
+
+This is an authenticated endpoint and requires the 'Authorization: Bearer {token}' header to be set. You can get the token from the `/users/login` endpoint.
+
+
+Parameters:
+    story_id:  (required) ID of the story to get
+
+Body: (required)
+    NewComment (entity defined above)
+
+
+Responses:
+- 200
+    
+    {
+        comment_id: number
+    }
+    
+    
+---------------------------------
+
+
+
+GET &#x2F;stories&#x2F;{story_id}&#x2F;comments&#x2F;{comment_id}
+
+    Get a specific comment on a specific story.
+
+
+Parameters:
+    story_id:  (required) ID of the story to get
+    comment_id:  (required) ID of the comment to get
+
+Responses:
+- 200
+    // TODO
+    
+    
+---------------------------------
+
+
+
+POST &#x2F;users
+
+    Create a new user with the given `username` and `password`. Remember your credentials, as you will need them to login!
+
+
+
+Body: (required)
+    NewUser (entity defined above)
+
+
+Responses:
+- 200
+    
+    {
+        user_id: number
+    }
+    
+    
+---------------------------------
+
+
+
+GET &#x2F;users&#x2F;find&#x2F;{username}
+
+    Find a given `username`&#x27;s `user_id`.
+
+
+Parameters:
+    username:  (required) Username you want to find the id of
+
+Responses:
+- 200
+    
+    {
+        user_id: number
+    }
+    
+    
+---------------------------------
+
+
+
+POST &#x2F;users&#x2F;login
+
+    Login as a given user. Use either the `username` or `user_id`. Returns the API token for using authenticated APIs (such as creating a story or comment).
+
+
+
+Body: (required)
+    UserLogin (entity defined above)
+
+
+Responses:
+- 200
+    
+    {
+        user_id: number
+    }
+    
+    
+---------------------------------
+
+
+
+
+</pre>
+
+
+        </main>
+        <footer>
+            @ Copyright 2022 by C. Genschwap
+        </footer>
+    </body>
+</html>

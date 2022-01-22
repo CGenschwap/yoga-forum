@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "yoga-forum",
+    "templatize-me",
+    "yoga-actor",
+]

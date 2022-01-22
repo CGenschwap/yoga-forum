@@ -1,0 +1,85 @@
+{# This generates the text-form of the API documentation based on the OpenAPI
+    specification. Frankly, its terrible, and the formatting isn't particularly
+    good. This is a temporary solution and we might need to shift to creating a
+    mini-program to generate a pretty text-spec from the OpenAPI spec. #}
+**************************
+* YOGA API Documentation *
+**************************
+
+Documentation for the YOGA API. This is generated from the OpenAPI specification which should be considered the true-reference.
+
+*************
+** Servers **
+*************
+There are currently two servers provided for YOGA. One is the
+development server which you should use while developing your
+UI, and the other is the production instance which will be
+moderated.
+{% for server in servers %}
+- {{server.url}} - {{server.description}}
+{% endfor %}
+
+**************
+** Entities **
+**************
+Various entity definitions which will be referenced throughout
+the API documentation.
+{% for name, structure in components.schemas %}
+{{name}} {
+
+    {%- for prop_name, property in structure.properties %}
+    {{prop_name}}: {{property.type}} {% if property.nullable %} (optional) {% endif %}
+    {%- endfor %}
+}
+{% endfor %}
+
+**********
+** APIs **
+**********
+{%- for path, path_obj_outer in paths %}
+{% for req_kind, path_obj in path_obj_outer %}
+{{req_kind | upper}} {{path}}
+
+    {{path_obj.description}}
+{% if path_obj.security %}
+This is an authenticated endpoint and requires the 'Authorization: Bearer {token}' header to be set. You can get the token from the `/users/login` endpoint.
+{% endif %}
+{% if path_obj.parameters %}
+Parameters:
+{%- for param in path_obj.parameters %}
+    {{param.name}}: {% if param.in == 'query' %}(query param){% endif %} {% if param.required %}(required){%endif %} {{param.description}} 
+{%- endfor -%}
+{%- endif %}
+{% if path_obj.requestBody %}
+Body: {%- if path_obj.requestBody.required %} (required) {%- endif -%}
+{% if path_obj.requestBody.content['application/json'].schema['$ref'] %}
+    {{ path_obj.requestBody.content['application/json'].schema['$ref'] | replace(from='#/components/schemas/', to='') }} (entity defined above)
+{% endif %}
+{% endif %}
+{%- if path_obj.responses %}
+Responses:
+{%- for code, response in path_obj.responses %}
+- {{code}}
+    {{response.description}}
+    {%- if response.content['application/json'] -%}
+    {%- set obj = response.content['application/json'].schema -%}
+    {%- if not obj.type  -%}
+    // TODO
+    {% elif obj.type == 'object' %}
+    {
+        {%- for name, property in obj.properties %}
+        {%- if property.type == 'array' %}
+        {{name}}: [{{property.items['$ref'] | replace(from='#/components/schemas/', to='')}}]
+        {%- else %}
+        {{name}}: {{property.type}}
+        {%- endif %}
+        {%- endfor %}
+    }
+    {% endif %}
+    {% endif %}
+{%- endfor -%}
+{% endif %}
+---------------------------------
+{% endfor %}
+{% endfor %}
+

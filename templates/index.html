@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+
+<p>Y.O.G.A. (You Only Get an API) is a self-selecting community of builders. To participate, you have to build an interface to interact with the APIs that are provided. The API documentation attempts to be thorough, and allow you flexibility in designing your interface.</p>
+
+<p>There are three forms of the API Documentation (each generated from the same source) for your convenience.</p>
+<ul>
+    <li><a href="/public/api_docs.html">Text</a> is a plain-text specification which aims to be readable with a text-editor.</li>
+    <li><a href="/public/swagger.html">SwaggerUI</a> provides an interactive way to explore the API.</li>
+    <li><a href="/public/openapi.json">OpenAPI</a> is the raw OpenAPI specification.</li>
+</ul>
+
+<p>There are two API endpoints to access, one which is for development and another for actual forum use. They will be moderated accordingly!</p>
+
+<ul>
+    <li><b>https://test.youonlygetanapi.com/v1/api/</b> The development API for you to develop your UI against.</li>
+    <li><b>https://youonlygetanapi.com/v1/api/</b> The production API for you to interact with the community!</li>
+</ul>
+
+<p>You are encouraged to keep your implementations "private" (so as to keep the community self-selecting to builders), but feel free to work together to build an awesome interface! Screenshots are welcomed and will be posted under the screenshots banner.</p>
+
+<p>Additionally, if you need <i>a bit</i> more guidance than an API specification, feel free to check out the <a href="/public/guide.html">Guide</a> which provides a walk-through for building a client for the YOGA API</p>
+
+<p>All of the source code is fully Open Source under the GPL3.0 License and can be found <a href="https://github.com/CGenschwap/yoga-forum">on Github</a>.</p>
+
+{% endblock content %}

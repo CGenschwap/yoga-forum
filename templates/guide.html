@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+
+{% block head %}
+<title>YOGA - Guide</title>
+{% endblock head %}
+
+{% block content %}
+
+<p>
+YOGA is a forum for builders where you bring your own interface to interact with others.
+However, that doesn't mean you can't get a little help on your journey!
+</p>
+
+<p>
+This is a day-by-day guide for how to build your very own YOGA Forum viewer, and essentially lays out what we believe is the easiest path to getting started.
+Feel free to follow it, deviate from it, or do something <i>totally</i> different.
+We provide the API, you provide the way you want to interact with it!
+</p>
+
+<p>
+We've made this a day-to-day guide, but you shouldn't rush to build any of it. Building anything is more time-consuming than you expect, no matter how "simple" it might be. We've organized this guide such that it starts simple, and has high-reward, before getting into the slightly more complicated stuff.
+</p>
+
+<h1>Day 1: Listing Stories</h1>
+
+<p>
+The first step we are going to take in interacting with the YOGA API is to list out the stories that users have submitted. This API endpoint requires no authentication, and is a simple <code>GET</code> request with no required parameters. We're going to give examples of the requests using <code>curl</code>, but you'll want to use whatever HTTP library your language provides or you prefer.
+</p>
+
+
+<p>
+The <code>curl</code> command to get a list of stories is as simple as it gets! Note that we are going to be using the <i>test</i> version of the API, which is identical to the real API except the data is wiped periodically -- perfect for testing our UI against!
+</p>
+
+<pre>
+$ curl http://test.YouOnlyGetAnApi.com/v1/api/stories
+</pre>
+
+<p>
+Let's quickly pick apart the URL of the API we just called. The base, <code>http://test.YouOnlyGetAnApi.com</code> is pretty self-explanatory. Next, we have <code>/v1/api/</code> which states we are using version 1 of the API. Since YOGA is an API-only community, backwards compatibility is <i>huge</i> for us. Breaking everyone's home-built clients is unacceptable for us, so every API provided will be maintained indefinitely.
+</p>
+
+<p>
+Finally we have <code>/stories</code>, which refers to the "stories" entities. When we <code>GET</code> from this endpoint we will receive a list of stories; when we <code>POST</code> to this endpoint we will create a new story (we'll address this later on!); and when we <code>GET</code> a <i>specific</i> story ID we will get that specific story (which we will address in just a second!).
+</p>
+
+<p>
+Take a look at the output you received from your API call. If you clean it up with a JSON pretty-printer (such as <code>jq</code>) you'll see something like so:
+</p>
+
+<pre>
+$ curl http://test.YouOnlyGetAnApi.com/v1/api/stories | jq .
+{
+  "stories": [
+    {
+      "id": 186,
+      "title": "title-0EheU8SowmrMJfM1",
+      "author_id": 118,
+      "created_at": 1650486743,
+      "url": "http://example.com/-lR1ykWC8mQbK0mix",
+      "text": "body-FmoIM1qSRQTZxvn4"
+    },
+    {
+      "id": 187,
+      "title": "title-V0tmd4xluPSrCynT",
+      "author_id": 123,
+      "created_at": 1650486743,
+      "url": "http://example.com/-h3qJCcVmGzpC0ude",
+      "text": "body-Njb6lGFERNLhKhNT"
+    },
+    ...
+  ],
+  "next_token": "eyJzb3J0X2tpbmQiOiJOZXciLCJ2YWx1ZSI6MTY1MDQ4NjczOH0="
+}
+</pre>
+
+<p>
+We've truncated the response a bit since it is <i>long</i>, and we've also replaced all of the information with demo-text. But the gist is there!
+</p>
+
+<p>
+The first thing to note is that there are two top-level JSON objects, <code>"stories"</code> and <code>"next_token"</code>. We're going to ignore the <code>"next_token</code> for a minute and focus on the <code>"stories"</code> object.
+</p>
+
+<p>
+The <code>"stories"</code> object contains an array of <code>Story</code> entities. These entities are described in the OpenAPI specification but TODO
+</p>
+
+<p>
+Now that we know what the <code>Story</code> entity <i>is</i> we can display it using any UI code you want. You're on your own for displaying things, and feel free to experiment with different technologies.
+</p>
+
+<p>
+Let's take a look at the <code>"next_token"</code> object also present in the JSON response. 
+</p>
+
+<pre>
+"next_token": "eyJzb3J0X2tpbmQiOiJOZXciLCJ2YWx1ZSI6MTY1MDQ4NjczOH0="
+</pre>
+
+<p>
+It is a weird looking string, and it might not be clear what it is for. The purpose of the <code>"next_token"</code> is to serve as a key to fetch the <i>next</i> page of results from the API. Rather than returning every <code>Story</code>, which would overwhelm our server (and use up a lot of bandwidth) we simply return a few <code>Story</code>s and a "key" for you to get the next batch.
+</p>
+
+<details>
+    <summary>Want to learn more about implementing Next tokens?</summary>
+    <p>
+    Next tokens are an interesting part of API design that are surprisingly complicated to get "correct." I put "correct" in quotes because as with all engineering, it is about trade-offs and one implementation might differ from another due to the trade-offs in the domain it was built in. But it is always important to be deliberate with the trade-offs being made!
+    </p>
+    <p>
+    One of the first things you might have noticed about the <code>"next_token"</code> we provide is that it is a seemingly meaningless string. This is called an "opaque" token, and is purposefully made such that it is a token which the user should not create. The primary reason for this is so that we can change the format of the token at any time given the backend implementation and not break any user-flows. If the user is creating the next tokens themselves, we risk breaking their setup when we need to change their format for performance reasons.
+    </p>
+    <p>
+    Let's dig into the bit of the last paragraph -- "performance reasons." The entire existence of the next token is for performance, but there can be ways of implementing them that reduce performance. One of the naive ways of implementing next tokens is to use it as "offset" parameter to a SQL query. For example, imagine we had the query below for fetching our stories:
+    </p>
+
+    <pre>
+    SELECT id
+        , author_id
+        , title
+        , url
+        , text
+        , created_at
+    FROM stories
+    ORDER BY created_at DESC
+    OFFSET {next_token}
+    LIMIT 25
+    </pre>
+
+    <p>
+    At first glance, this seems like exactly what we want. Give the user 25 stories, and if they want more, we just offset by 25 (returning stories 26 through 50). Unfortunately there are a number of downsides to this approach, the top being that its performance suffers by a <i>lot</i> as the offset grows bigger.
+    </p>
+
+    <p>
+    If you imagine you are the SQL engine and you get the above query but with an offset of 5000. How would you know which stories to return? It turns out there is no way to do this other than sorting all of the stories and then counting until you reach the 5001st story. This has very poor performance, and is written about in a number of other posts online.
+    </p>
+
+    <p>
+    The other big issue with this implementation is that if 25 new stories are created between the time the user made their first request and their second request, they'll just receive the exact same 25 stories! We've offset the stories we return by 25, but the stories we just returned to the user have been pushed back in the sort by 25. This is obviously not a good user-experience, where the next page might return the exact same results or some other weird combination of new stuff and stuff you just saw.
+    </p>
+
+    <p>
+    So what is the "correct" implementation? For us that means not using the <code>OFFSET</code> SQL command and to instead do a <code>WHERE</code> check on the value of the token. Like so:
+    </p>
+
+    <pre>
+    SELECT id
+        , author_id
+        , title
+        , url
+        , text
+        , created_at
+    FROM stories
+    ORDER BY created_at DESC
+    WHERE created_at < {next_token}
+    LIMIT 25
+    </pre>
+
+    <p>
+    In this case, the "next_token" is just the <code>created_at</code> date of the oldest story we just returned to the user. What this means is two things: (1) the SQL engine can optimize this query for any next_token and (2) the user will always see the "next" page that they <i>expect</i>. A simple change, but with big consequences for API usability!
+    </p>
+
+    <p>
+    There is a bit more complexity to implementing next tokens than was just shown, but hopefully this gives you the gist of what to consider when implementing them. For instance, what if you wanted to give the user the ability to fetch not just the next page, but also the previous page? What if the user wants to jump to page 50 from page 1? What if the user wants to jump to the last page?
+    </p>
+    <p>
+    As always, it comes down to optimizing for user-experience (and performance is a huge aspect of that!) and most of the additional work for next tokens is handling edge-cases. Feel free to take a look at YOGA's code to get a sense for how we do it!
+    </p>
+</details>
+
+<p>
+Let's try using it! We can pass the <code>"next_token"</code> in as a query parameter to our previous <code>GET</code> call. (you're going to want to use your own token rather than the one we're using!)
+</p>
+
+<pre>
+$ curl http://test.YouOnlyGetAnApi.com/v1/api/stories?next_token=eyJzb3J0X2tpbmQiOiJOZXciLCJ2YWx1ZSI6MTY1MDQ4NjczOH0=
+</pre>
+
+<p>
+You should now see the next page of stories, as well as another <code>"next_token"</code>! Eventually, when you get to the end of the stories, the API will no longer return a <code>"next_token"</code> indicating that there is nothing else to fetch!
+</p>
+
+<p>
+Phew! We went over a number of things, and there is really only one more thing to cover before we can consider being "done" with listing stories. And that is the API call to get a <i>specific</i> story that we know the <code>id</code> for. We can do that by simply appending the <code>id</code> for a given story to the end of the <code>GET</code> call we started with.
+</p>
+
+<pre>
+$ curl http://test.YouOnlyGetAnApi.com/v1/api/stories/{story_id}
+</pre>
+
+<p>
+And that's it! You now have all the tools to fetch stories, fetch more stories, fetch a single story and etc. Now you just need to build a way to display this nicely, and tomorrow we'll tackle getting comments and displaying them.
+</p>
+
+<h1>Day 2: Listing Comments</h1>
+<p>
+The second step is getting comments on the stories we're viewing. This way we can see what other community members say about the stories, and is a huge part of interacting with the community. In general, this will be very similar to fetching stories which we just did!
+</p>
+
+<p>
+Comments <i>belong</i> to a given story. In that sense, there is no concept of a comment without a story. For this reason, to fetch comments of a given story we are going to be adding extra paths to our single-story API call.
+</p>
+
+<pre>
+$ curl http://test.YouOnlyGetAnApi.com/v1/api/stories/{story_id}/comments
+</pre>
+
+<p>
+That's right, to get the comments for a given story, we just take the API call we use to get a single story and append a <code>/comments</code> to it. Hopefully this makes sense to you and is an intuitive experience! If we pretty print the result, we'll see something <i>very</i> similar to our stories response.
+</p>
+
+<pre>
+$ curl http://test.YouOnlyGetAnApi.com/v1/api/stories/{story_id}/comments | jq .
+{
+  "comments": [
+    {
+      "id": 95,
+      "text": "comment-eACl10EzD9gN0d6z",
+      "author_id": 27,
+      "created_at": 1650486621,
+      "story_id": 1
+    },
+    {
+      "id": 99,
+      "text": "comment-ydGiGMzMHmYGiepV",
+      "author_id": 23,
+      "created_at": 1650486621,
+      "story_id": 1,
+      "parent_id": 95,
+    },
+    ...
+  ],
+  "next_token": "eyJzb3J0X2tpbmQiOiJOZXciLCJ2YWx1ZSI6MTY1MDQ4NjYyMH0="
+}
+</pre>
+
+<p>
+The <code>"comments"</code> object contains an array of <code>Comment</code> entities, and the <code>"next_token"</code> contains a token to get the next "page" of comments.
+</p>
+
+<p>
+Our <code>Comment</code> entity is pretty straightforward, with an <code>id</code>, an <code>author_id</code>, some <code>text</code> and a <code>created_at</code> timestamp. The potentially tricky bit is the optional <code>parent_id</code>. The <code>parent_id</code> is in reference to <i>another</i> comment of the same story which a given comment might be the <i>child</i> of.
+</p>
+
+<p>
+While the stories are just a list, comments form a <i>tree</i> which you have likely seen on a lot of forums like HackerNews, Lobste.rs or Reddit. Some forums just have comments as a list as well, or you even have Email which has the comments form a tree but is generally displayed as a list.
+</p>
+
+<p>
+This guide is primarily focused on the API usage of YOGA, and leaves the UI implementation details up to you, but in this situation we want to dive a <i>little</i> bit into how to implement this, because it may be tricky. The first step is fetching all of the comments you want to, whether that is <i>all</i> of the comments for a given story or just the first batch.
+</p>
+
+<p>
+Once you have the comments you are interested in, you are going to want to create a multi-root tree. Alternatively you can create a single-root tree with a special "root" comment which is skipped on display, but might make your implementation simpler. In general, you might realize that the API is returning a tree with children pointing to their parents, but this isn't particularly useful for <i>displaying</i> the tree nicely, so we want to invert the links in the tree that the API provides (and have the parents with a list of children).
+</p>
+
+<details>
+<summary>Data structures not really your thing? Click here!</summary>
+<p>
+If data structures aren't really your thing, this section will cover some pseudo-code for constructing a multi-root tree using a map and an array.
+</p>
+
+<pre>
+roots = []
+comment_tree = {}
+for comment in comments:
+    # This is a top-level comment, and we
+    # want to insert it into "roots" as well
+    # as our comment tree for any children it
+    # might have
+    if comment.parent_id == None:
+        roots.append(comment.id)
+        comment_tree.insert(comment_id, [])
+        continue
+
+    # Our comment has a parent which is already
+    # in the tree, so we can just append this comment
+    # to our parents children list
+    if comment_tree.contains(comment.parent_id):
+        comment_tree[comment.parent_id].append(comment.id)
+
+return (roots, comment_tree)
+</pre>
+
+<p>
+It might seem like there are some edge-cases missing, but you are safe to assume that the comments returned will be in a safe-order (for instance, parents are always returned before children). This lets us keep the algorithm simple!
+</p>
+</details>
+
+<p>
+Once you have your tree, you can then display it by going through a depth-first search of the tree and displaying each element you come across with an indent related to the depth you are at.
+</p>
+
+<details>
+    <summary>Algorithms not really your thing? Click here!</summary>
+    <p>
+    Using the result from the pseudo-code for creating the tree, we will show how to display the tree (in this case, just printing to the terminal).
+    </p>
+    <pre>
+    # Our LIFO queue will hold the (depth, comment_id) for a given
+    # comment. This will make printing easy. By default, let's just
+    # populate it with our "roots"
+    lifo_queue = [(0, comment_id) for comment_id in roots]
+    loop:
+        r = lifo_queue.pop_back()
+        if r is None:
+            # We've finished our printing of comments, we can
+            # exit now!
+            break
+
+        (depth, comment_id) = r 
+
+        print("  " * depth, comments[comment_id])
+
+        for child in tree[comment_id]:
+            lifo_queue.push_back(child)
+    </pre>
+    <p>
+    While this prints out the comments and children in a nice tree-looking style, it does not particularly care about the <i>order</i> of the comments at the same level. That is left as an exercise for the reader!
+    </p>
+</details>
+
+<p>
+As usual, you should feel free to do things <i>differently</i>. We just provide the API, you have full control over how you display the data. These are just our suggestions for anyone who doesn't want to go off the beaten path.
+</p>
+
+<h1>Day 3: Creating a User</h1>
+<p><i>Coming soon!</i></p>
+
+<h1>Day 4: Submitting a Story</h1>
+<p><i>Coming soon!</i></p>
+
+<h1>Day 5: Submitting a Comment</h1>
+<p><i>Coming soon!</i></p>
+
+{% endblock content %}
