@@ -1,6 +1,6 @@
 use anyhow::Result;
 use chrono::prelude::*;
-use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
+use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation, Algorithm};
 
 use serde::{Deserialize, Serialize};
 
@@ -36,15 +36,15 @@ impl JwtHandler {
     }
 
     pub fn parse(&self, token: String) -> Result<Claims> {
+        let mut validation = Validation::new(Algorithm::HS256);
+        validation.leeway = 30;
+        validation.validate_exp = true;
+        validation.validate_nbf = true;
+
         let token = decode::<Claims>(
             &token,
             &DecodingKey::from_secret(self.secret.as_ref()),
-            &Validation {
-                leeway: 30,
-                validate_exp: true,
-                validate_nbf: true,
-                ..Validation::default()
-            },
+            &validation
         )?;
         Ok(token.claims)
     }
